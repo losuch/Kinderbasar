@@ -1,2 +1,2 @@
 # Kinderbasar
-react-native app (only ios)
+react-native app for iOS and android

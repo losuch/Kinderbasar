@@ -1,15 +1,25 @@
-'use strict';
-
 /**
-* The MIT License (MIT)
-Copyright (c) 2016 Lukasz Osuch
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * (c) 2016 Lukasz Osuch
+ */
+'use strict';
 
 var React = require('react');
 var ReactNative = require('react-native');
@@ -19,6 +29,7 @@ var cheerio = require('cheerio');
 var BasarCell = require('./BasarCell');
 var BasarScreen = require('./BasarScreen');
 var SearchBar = require('./SearchBar');
+var dismissKeyboard = require('dismissKeyboard');
 
 var {
   ActivityIndicatorIOS,
@@ -29,8 +40,10 @@ var {
   Text,
   View,
   TouchableHighlight,
+  TouchableNativeFeedback,
   AlertIOS,
   AsyncStorage,
+  Image,
 } = ReactNative;
 
 var API_URL = 'http://www.kinderbasar-online.de/Kinderbasar/Termine/Liste/l-';
@@ -43,7 +56,7 @@ var MOCKED_LIST = [
   {id: 4, title: 'Kinder- und Jugendsachen- Flohmarkt', address: '65462 Ginsheim-Gustavsburg', description: 'Gutsortierter Abgabebasar für Baby- und Kleinkinderkleidung Gr. 50-176, Umstandsmode, Spielzeug und Kinderzubeh&oum...', date: 'Sa, 30.04.2016', time:'von 09:30 bis 12:30', url:'test'}
 ];
 
-var TouchableElement = TouchableHighlight;
+
 
 var SearchScreen = React.createClass({
 
@@ -75,12 +88,18 @@ var SearchScreen = React.createClass({
       this.props.navigator.push({
         title: '',
         component: BasarScreen,
+        rightButtonIcon: this.renderDownloadIcon().props.source,
+        onRightButtonPress: () => {
+          AlertIOS.alert('Zu Favoriten hinzufuegen?', null, [
+            {text: 'Cancel', style: 'cancel'},
+            {text: 'OK', onPress: () => this.onAddFavorite(basar)},
+          ]);
+        },
         passProps: {basar: basar, isFavorites: this.state.isFavorites},
       });
     } else {
       dismissKeyboard();
       this.props.navigator.push({
-        title: '',
         name: 'basar',
         basar: basar,
       });
@@ -102,9 +121,6 @@ var SearchScreen = React.createClass({
       });
 
     });
-
-
-
   },
 
   onSelectRad: function(radIndex: number){
@@ -268,6 +284,10 @@ var SearchScreen = React.createClass({
 
   },
 
+  renderDownloadIcon: function() {
+    return(<Image style={styles.favoritesIcon} source={require('./resources/ios7-download-outline.png')} />);
+  },
+
   renderSeparator: function(
     sectionID: number | string,
     rowID: number | string,
@@ -283,27 +303,53 @@ var SearchScreen = React.createClass({
   },
 
   renderFooter: function (){
-    if(this.state.maxPageNr > this.state.pageNr) {
-      if (this.state.isLoadingNextPage) {
-        return(<View style={styles.footer}>
-          <ActivityIndicatorIOS
-            animating={this.state.isLoadingNextPage}
-            style={styles.spinner}
-          />
-        </View>
-      );
-      } else {
 
+    if (Platform.OS === 'android') {
+      TouchableElement = TouchableNativeFeedback;
+      if(this.state.maxPageNr > this.state.pageNr) {
+        if (this.state.isLoadingNextPage) {
+          return(<View style={styles.footer}>
+            <ProgressBarAndroid
+              styleAttr="Large"
+              style={styles.spinner}
+            />
+          </View>
+        );
+        } else {
+          return(
+            <View style={styles.footer}>
+              <TouchableElement
+                onPress={this.onLoadNextPage}
+                underlayColor='white'>
+                <View>
+                  <Text style={styles.footerText}>weiter</Text>
+                </View>
+              </TouchableElement>
+            </View>);
+        }
       }
-      return(
-        <View style={styles.footer}>
-          <TouchableElement
-            onPress={this.onLoadNextPage}
-            underlayColor='white'>
-            <Text style={styles.footerText}>weiter</Text>
-          </TouchableElement>
-        </View>
-      );
+    } else {
+      var TouchableElement = TouchableHighlight;
+      if(this.state.maxPageNr > this.state.pageNr) {
+        if (this.state.isLoadingNextPage) {
+          return(<View style={styles.footer}>
+            <ActivityIndicatorIOS
+              animating={this.state.isLoadingNextPage}
+              style={styles.spinner}
+            />
+          </View>
+        );
+        } else {
+          return(
+            <View style={styles.footer}>
+              <TouchableElement
+                onPress={this.onLoadNextPage}
+                underlayColor='white'>
+                <Text style={styles.footerText}>weiter</Text>
+              </TouchableElement>
+            </View>);
+        }
+      }
     }
   },
 
@@ -320,10 +366,6 @@ var SearchScreen = React.createClass({
         onHighlight={() => highlightRowFunc(sectionID, rowID)}
         onUnhighlight={() => highlightRowFunc(null, null)}
         basar={basar}
-        onAddFavorite={() => AlertIOS.alert('Save into Favorites', null, [
-    {text: 'Cancel', style: 'cancel'},
-    {text: 'OK', onPress: () => this.onAddFavorite(basar)},
-  ])}
       />
     );
   },
@@ -338,10 +380,15 @@ render: function() {
         isLoading={this.state.isLoading}
       /> :
     <ListView
+      ref="listview"
       dataSource={this.state.dataSource}
       renderRow={this.renderRow}
       renderFooter={this.renderFooter}
       renderSeparator={this.renderSeparator}
+      automaticallyAdjustContentInsets={false}
+      keyboardDismissMode="on-drag"
+      keyboardShouldPersistTaps={true}
+      showsVerticalScrollIndicator={false}
     />;
   return (
     <View style={styles.container}>
@@ -363,7 +410,7 @@ render: function() {
 
 var NoBasar = React.createClass({
   render: function() {
-  var text = 'Kein Basar gefunden';
+  var text = 'Keinen Termin gefunden';
   return (
     <View style={[styles.container, styles.centerText]}>
       <Text style={styles.noBasarText}>{text}</Text>
@@ -391,6 +438,10 @@ var styles = StyleSheet.create({
     padding: 15,
     alignItems: 'center',
 
+  },
+  spinner: {
+    width: 30,
+    height: 30,
   },
   footerText: {
     color: 'rgb(0, 90,	255)',

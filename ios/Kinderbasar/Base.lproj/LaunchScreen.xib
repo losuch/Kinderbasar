@@ -12,7 +12,7 @@
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
                 <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="kids.png" translatesAutoresizingMaskIntoConstraints="NO" id="7bT-I4-23V">
-                    <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                    <rect key="frame" x="0.0" y="0.0" width="600" height="602"/>
                     <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                 </imageView>
             </subviews>
@@ -20,10 +20,11 @@
             <constraints>
                 <constraint firstItem="7bT-I4-23V" firstAttribute="centerX" secondItem="iN0-l3-epB" secondAttribute="centerX" id="EzX-Jk-huQ"/>
                 <constraint firstAttribute="trailing" secondItem="7bT-I4-23V" secondAttribute="trailing" id="Hi1-ua-Qhz"/>
+                <constraint firstAttribute="bottom" secondItem="7bT-I4-23V" secondAttribute="bottom" constant="-2" id="agQ-ao-ceK"/>
                 <constraint firstItem="7bT-I4-23V" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="hMa-8q-Hxs"/>
-                <constraint firstAttribute="bottom" secondItem="7bT-I4-23V" secondAttribute="bottom" id="mGm-Hi-Mla"/>
+                <constraint firstAttribute="bottom" secondItem="7bT-I4-23V" secondAttribute="bottom" constant="-2" id="mGm-Hi-Mla"/>
                 <constraint firstItem="7bT-I4-23V" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="raR-po-QGr"/>
-                <constraint firstItem="7bT-I4-23V" firstAttribute="centerY" secondItem="iN0-l3-epB" secondAttribute="centerY" id="zlW-Z4-fub"/>
+                <constraint firstItem="7bT-I4-23V" firstAttribute="centerY" secondItem="iN0-l3-epB" secondAttribute="centerY" constant="1" id="zlW-Z4-fub"/>
             </constraints>
             <nil key="simulatedStatusBarMetrics"/>
             <point key="canvasLocation" x="548" y="455"/>
